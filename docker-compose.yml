@@ -1,0 +1,81 @@
+version: "3"
+
+
+services:
+
+  postgresdb:
+    container_name: erudit_db
+    build:
+      context: ./docker/postgres
+      dockerfile: ./Dockerfile
+    environment:
+      - POSTGRES_PASSWORD=erudit_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - my_network
+
+  web:
+    container_name: erudit_app
+    build:
+      context: ./
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/usr/src/app
+    command: >
+       sh -c "python3 manage.py makemigrations --noinput &&
+              python3 manage.py migrate --noinput &&
+              python3 manage.py collectstatic --noinput &&
+              exec gunicorn core.wsgi:application -b 0.0.0.0:8000 --reload"
+    depends_on:
+      - postgresdb
+    networks:
+      - my_network
+
+  nginx:
+    container_name: erudit_nginx
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - ./static/:/static
+      - ./media/:/media
+    depends_on:
+      - postgresdb
+      - web
+    networks:
+      - my_network
+
+  redis:
+    container_name: erudit_redis
+    image: redis
+    networks:
+      - my_network
+
+  celery:
+    build:
+      context: .
+    container_name: celery-worker
+    restart: always
+    command: sh -c "celery -A core worker -l INFO"
+    volumes:
+      - ./:/usr/src/app
+    depends_on:
+      - redis
+      - web
+      - postgresdb
+    networks:
+      - my_network
+
+volumes:
+  pgdata:
+  media:
+  static:
+
+networks:
+  my_network:

@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mainapp',
+    "psycopg2",
 ]
 
 MIDDLEWARE = [
@@ -52,10 +53,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "erudit_db",
+        "USER": "erudit_user",
+        "PASSWORD": "erudit_password",
+        "HOST": "postgresdb",
+        "PORT": "5432",
     }
 }
 
@@ -92,6 +105,24 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR / 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR / 'media')
+
+
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_BROKER_TRANSPORT = "redis"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_RESULT_BACKEND = "redis://redis:6379"
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'eruditleemarin.edu@gmail.com'
+EMAIL_HOST_PASSWORD = 'eruditleemarin1#'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
